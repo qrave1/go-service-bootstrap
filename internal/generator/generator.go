@@ -1,13 +1,18 @@
 package generator
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 )
+
+//go:embed all:templates
+var templateFS embed.FS
 
 // Config holds all the user's choices for template generation
 type Config struct {
@@ -73,18 +78,15 @@ func Generate(cfg Config) error {
 		return fmt.Errorf("could not get absolute path for project: %w", err)
 	}
 
-	templateRoot, err := filepath.Abs("templates")
-	if err != nil {
-		return fmt.Errorf("could not get absolute path for templates: %w", err)
-	}
+	templateRoot := "templates"
 
-	err = filepath.Walk(templateRoot, func(path string, info os.FileInfo, err error) error {
+	err = fs.WalkDir(templateFS, templateRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
 		// Skip directories
-		if info.IsDir() {
+		if d.IsDir() {
 			return nil
 		}
 
@@ -111,8 +113,8 @@ func Generate(cfg Config) error {
 			return err
 		}
 
-		// Parse and execute template
-		tmpl, err := template.ParseFiles(path)
+		// Parse and execute template from the embedded FS
+		tmpl, err := template.ParseFS(templateFS, path)
 		if err != nil {
 			return fmt.Errorf("error parsing template %s: %w", path, err)
 		}

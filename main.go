@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
-
 	"github.com/qrave1/go-service-bootstrap/internal/tui"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {

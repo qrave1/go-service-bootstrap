@@ -1,0 +1,14 @@
+version: '3'
+
+vars:
+  BIN_PATH: ./bin
+  BIN_NAME: go-svc-bootstrap
+
+tasks:
+  cleanup:
+    cmd: rm -rf {{.BIN_PATH}}
+
+  build:
+    deps: [cleanup]
+    cmd: go build -o {{.BIN_PATH}}/{{.BIN_NAME}} main.go
+

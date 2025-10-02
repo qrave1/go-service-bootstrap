@@ -150,6 +150,14 @@ func Generate(cfg Config) error {
 		return fmt.Errorf("failed to run 'go mod tidy': %w", err)
 	}
 
+	// Run goimports to format code and group imports
+	cmd = exec.Command("goimports", "-local", "-w", ".")
+	cmd.Dir = projectPath
+	if err := cmd.Run(); err != nil {
+		// Don't fail if goimports isn't installed, just warn
+		fmt.Printf("\nWarning: could not run 'goimports'. Please install it with 'go install golang.org/x/tools/cmd/goimports@latest' and run it on the generated project.\n")
+	}
+
 	fmt.Printf("\nProject '%s' generated successfully!\n", cfg.ProjectName)
 
 	return nil

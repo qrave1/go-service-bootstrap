@@ -4,10 +4,10 @@ package postgres
 import (
 	"context"
 
-	"{{ .ProjectName }}/internal/domain/models"
 	"github.com/jmoiron/sqlx"
-
 	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
+
+	"{{ .ProjectName }}/internal/domain/models"
 )
 
 // PostgresUserRepository is the PostgreSQL implementation of the UserRepository.

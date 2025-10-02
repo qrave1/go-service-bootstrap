@@ -6,10 +6,11 @@ import (
 	"log"
 
 	"{{ .ProjectName }}/internal/application"
-	"{{ .ProjectName }}/internal/infra/ports/http"
-
 {{- if .HasDB }}
 	"{{ .ProjectName }}/internal/infra/adapters/postgres"
+{{- end }}
+	"{{ .ProjectName }}/internal/infra/ports/http"
+{{- if .HasDB }}
 	"{{ .ProjectName }}/internal/usecase"
 {{- end }}
 )

@@ -38,6 +38,10 @@ type Config struct {
 	HasMakefile bool
 	HasTaskfile bool
 
+	// Config
+	HasYAML bool
+	HasEnv  bool
+
 	// Template-specific values
 	HttpPort string
 	DbUser   string
@@ -58,6 +62,8 @@ func NewConfig(projectName string, options map[string]struct{}) Config {
 	_, cfg.HasHTML = options["Enable HTML templates"]
 	_, cfg.HasMakefile = options["Makefile"]
 	_, cfg.HasTaskfile = options["Taskfile"]
+	_, cfg.HasYAML = options["YAML"]
+	_, cfg.HasEnv = options[".env"]
 
 	cfg.HasDB = cfg.HasPostgres || cfg.HasMysql || cfg.HasSqlite
 
@@ -95,13 +101,25 @@ func Generate(cfg Config) error {
 		destPath = strings.TrimSuffix(destPath, ".tmpl")
 
 		// Conditional file generation
-		if !cfg.HasDB && (strings.Contains(destPath, "postgres") || strings.Contains(destPath, "domain") || strings.Contains(destPath, "usecase")) {
+		if !cfg.HasPostgres && strings.Contains(path, "postgres") {
+			return nil
+		}
+		if !cfg.HasMysql && strings.Contains(path, "mysql") {
+			return nil
+		}
+		if !cfg.HasDB && (strings.Contains(path, "domain") || strings.Contains(path, "usecase")) {
 			return nil
 		}
 		if !cfg.HasMakefile && strings.HasSuffix(destPath, "Makefile") {
 			return nil
 		}
 		if !cfg.HasTaskfile && strings.HasSuffix(destPath, "Taskfile.yml") {
+			return nil
+		}
+		if !cfg.HasYAML && strings.HasSuffix(destPath, "config.yaml") {
+			return nil
+		}
+		if !cfg.HasEnv && strings.HasSuffix(destPath, ".env") {
 			return nil
 		}
 		if !cfg.HasHTML && strings.Contains(destPath, "web") {

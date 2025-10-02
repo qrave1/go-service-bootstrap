@@ -6,8 +6,10 @@ import (
 	"log"
 
 	"{{ .ProjectName }}/internal/application"
-{{- if .HasDB }}
+{{- if .HasPostgres }}
 	"{{ .ProjectName }}/internal/infra/adapters/postgres"
+{{- else if .HasMysql }}
+	"{{ .ProjectName }}/internal/infra/adapters/mysql"
 {{- end }}
 	"{{ .ProjectName }}/internal/infra/ports/http"
 {{- if .HasDB }}
@@ -28,15 +30,24 @@ func main() {
 	logger.Info("starting application")
 
 {{- if .HasDB }}
-	// Init DB connection
-	// dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-	// 	cfg.DB.Host, cfg.DB.Port, cfg.DB.User, cfg.DB.Password, cfg.DB.Name)
+	var dsn string
+	var repo usecase.UserRepository
 
-	// repo, err := postgres.NewPostgresRepository(dsn)
-	// if err != nil {
-	// 	logger.Fatal("failed to connect to database", "error", err)
-	// }
-	// logger.Info("database connection established")
+{{- if .HasPostgres }}
+	dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Name)
+	repo, err = postgres.NewPostgresRepository(dsn)
+{{- end }}
+{{- if .HasMysql }}
+	dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true",
+		cfg.MySQL.User, cfg.MySQL.Password, cfg.MySQL.Host, cfg.MySQL.Port, cfg.MySQL.Name)
+	repo, err = mysql.NewMySQLRepository(dsn)
+{{- end }}
+
+	if err != nil {
+		logger.Fatal("failed to connect to database", "error", err)
+	}
+	logger.Info("database connection established")
 
 	// Init usecase
 	// exampleUsecase := usecase.NewExampleUsecase(repo)

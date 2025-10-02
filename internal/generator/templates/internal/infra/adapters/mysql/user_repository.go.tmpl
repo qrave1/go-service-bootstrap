@@ -1,0 +1,43 @@
+{{- /* templates/internal/infra/adapters/mysql/user_repository.go.tmpl */ -}}
+package mysql
+
+import (
+	"context"
+
+	"{{ .ProjectName }}/internal/domain/models"
+	"github.com/jmoiron/sqlx"
+
+	_ "github.com/go-sql-driver/mysql" // MySQL driver
+)
+
+// MySQLUserRepository is the MySQL implementation of the UserRepository.
+type MySQLUserRepository struct {
+	db *sqlx.DB
+}
+
+// NewMySQLRepository creates a new MySQLUserRepository.
+func NewMySQLRepository(dataSourceName string) (*MySQLUserRepository, error) {
+	db, err := sqlx.Connect("mysql", dataSourceName)
+	if err != nil {
+		return nil, err
+	}
+	return &MySQLUserRepository{db: db}, nil
+}
+
+// FindByID finds a user by their ID.
+func (r *MySQLUserRepository) FindByID(ctx context.Context, id int64) (*models.User, error) {
+	var user models.User
+	err := r.db.GetContext(ctx, &user, "SELECT * FROM users WHERE id=?", id)
+	return &user, err
+}
+
+// Store saves a user to the database.
+func (r *MySQLUserRepository) Store(ctx context.Context, user *models.User) error {
+	query := `INSERT INTO users (name) VALUES (?)`
+	res, err := r.db.ExecContext(ctx, query, user.Name)
+	if err != nil {
+		return err
+	}
+	user.ID, err = res.LastInsertId()
+	return err
+}

@@ -2,30 +2,56 @@
 package application
 
 import (
-	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/caarlos0/env/v10"
+{{- if .HasYAML }}
+	"os"
+	"gopkg.in/yaml.v3"
+{{- end }}
 )
 
 type Config struct {
-	LogLevel string `yaml:"log_level" env:"LOG_LEVEL" env-default:"info"`
+	LogLevel string `env:"LOG_LEVEL" envDefault:"info"`
 	HTTP     struct {
-		Port int `yaml:"port" env:"HTTP_PORT" env-default:"8080"`
-	} `yaml:"http"`
-{{- if .HasDB }}
-	DB struct {
-		Host     string `yaml:"host" env:"DB_HOST" env-default:"localhost"`
-		Port     int    `yaml:"port" env:"DB_PORT" env-default:"5432"`
-		User     string `yaml:"user" env:"DB_USER" env-default:"user"`
-		Password string `yaml:"password" env:"DB_PASSWORD" env-default:"password"`
-		Name     string `yaml:"name" env:"DB_NAME" env-default:"mydatabase"`
-	} `yaml:"db"`
+		Port int `env:"HTTP_PORT" envDefault:"8080"`
+	} `envPrefix:"HTTP_"`
+{{- if .HasPostgres }}
+	Postgres struct {
+		Host     string `env:"PG_HOST" envDefault:"localhost"`
+		Port     int    `env:"PG_PORT" envDefault:"5432"`
+		User     string `env:"PG_USER" envDefault:"user"`
+		Password string `env:"PG_PASSWORD" envDefault:"password"`
+		Name     string `env:"PG_DBNAME" envDefault:"mydatabase"`
+	} `envPrefix:"PG_"`
+{{- end }}
+{{- if .HasMysql }}
+	MySQL struct {
+		Host     string `env:"MYSQL_HOST" envDefault:"localhost"`
+		Port     int    `env:"MYSQL_PORT" envDefault:"3306"`
+		User     string `env:"MYSQL_USER" envDefault:"user"`
+		Password string `env:"MYSQL_PASSWORD" envDefault:"password"`
+		Name     string `env:"MYSQL_DBNAME" envDefault:"mydatabase"`
+	} `envPrefix:"MYSQL_"`
 {{- end }}
 }
 
 func LoadConfig() (*Config, error) {
-	var cfg Config
-	// TODO: Add loading from a file e.g. config/config.yaml
-	if err := cleanenv.ReadEnv(&cfg); err != nil {
+	cfg := &Config{}
+
+{{- if .HasYAML }}
+	// Load from YAML file
+	f, err := os.Open("config.yaml")
+	if err == nil {
+		defer f.Close()
+		if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
+			return nil, err
+		}
+	}
+{{- end }}
+
+	// Parse environment variables
+	if err := env.Parse(cfg); err != nil {
 		return nil, err
 	}
-	return &cfg, nil
+
+	return cfg, nil
 }

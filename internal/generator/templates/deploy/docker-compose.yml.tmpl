@@ -10,11 +10,11 @@ services:
       - "{{.HttpPort}}:{{.HttpPort}}"
     volumes:
       - ../:/app
+    depends_on:
 {{- if .HasPostgres }}
-    depends_on:
       - postgres
-{{- else if .HasMysql }}
-    depends_on:
+{{- end }}
+{{- if .HasMysql }}
       - mysql
 {{- end }}
 

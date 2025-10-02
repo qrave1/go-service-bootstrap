@@ -1,0 +1,13 @@
+{{- /* templates/internal/usecase/user_repository.go.tmpl */ -}}
+package usecase
+
+import (
+	"context"
+	"{{ .ProjectName }}/internal/domain/models"
+)
+
+// UserRepository defines the interface for user data persistence.
+type UserRepository interface {
+	FindByID(ctx context.Context, id int64) (*models.User, error)
+	Store(ctx context.Context, user *models.User) error
+}

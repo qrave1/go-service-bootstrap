@@ -1,0 +1,54 @@
+{{- /* templates/deploy/docker-compose.yml.tmpl */ -}}
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "{{.HttpPort}}:{{.HttpPort}}"
+    volumes:
+      - ../:/app
+{{- if .HasPostgres }}
+    depends_on:
+      - postgres
+{{- else if .HasMysql }}
+    depends_on:
+      - mysql
+{{- end }}
+
+{{- if .HasPostgres }}
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: {{.DbUser}}
+      POSTGRES_PASSWORD: {{.DbPass}}
+      POSTGRES_DB: {{.DbName}}
+    ports:
+      - "{{.DbPort}}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+{{- end }}
+
+{{- if .HasMysql }}
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: {{.DbName}}
+      MYSQL_USER: {{.DbUser}}
+      MYSQL_PASSWORD: {{.DbPass}}
+    ports:
+      - "{{.DbPort}}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+{{- end }}
+
+volumes:
+{{- if .HasPostgres }}
+  postgres_data:
+{{- end }}
+{{- if .HasMysql }}
+  mysql_data:
+{{- end }}

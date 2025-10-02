@@ -1,0 +1,45 @@
+{{- /* templates/internal/infra/adapters/postgres/user_repository.go.tmpl */ -}}
+package postgres
+
+import (
+	"context"
+
+	"{{ .ProjectName }}/internal/domain/models"
+	"github.com/jmoiron/sqlx"
+
+	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver
+)
+
+// PostgresUserRepository is the PostgreSQL implementation of the UserRepository.
+type PostgresUserRepository struct {
+	db *sqlx.DB
+}
+
+// NewPostgresRepository creates a new PostgresUserRepository.
+func NewPostgresRepository(dataSourceName string) (*PostgresUserRepository, error) {
+	db, err := sqlx.Connect("pgx", dataSourceName)
+	if err != nil {
+		return nil, err
+	}
+	return &PostgresUserRepository{db: db}, nil
+}
+
+// FindByID finds a user by their ID.
+func (r *PostgresUserRepository) FindByID(ctx context.Context, id int64) (*models.User, error) {
+	var user models.User
+	err := r.db.GetContext(ctx, &user, "SELECT * FROM users WHERE id=$1", id)
+	return &user, err
+}
+
+// Store saves a user to the database.
+func (r *PostgresUserRepository) Store(ctx context.Context, user *models.User) error {
+	query := `INSERT INTO users (name) VALUES (:name) RETURNING id`
+	rows, err := r.db.NamedQueryContext(ctx, query, user)
+	if err != nil {
+		return err
+	}
+	if rows.Next() {
+		rows.Scan(&user.ID)
+	}
+	return rows.Close()
+}

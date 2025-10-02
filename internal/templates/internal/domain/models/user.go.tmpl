@@ -1,0 +1,8 @@
+{{- /* templates/internal/domain/models/user.go.tmpl */ -}}
+package models
+
+// User represents a user in the domain.
+type User struct {
+	ID   int64  `db:"id"`
+	Name string `db:"name"`
+}

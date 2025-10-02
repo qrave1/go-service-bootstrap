@@ -1,0 +1,72 @@
+{{- /* templates/internal/infra/ports/http/server.go.tmpl */ -}}
+package http
+
+import (
+	"log/slog"
+
+{{- if .IsEcho }}
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+{{- else if .IsFiber }}
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+{{- end }}
+)
+
+// Server defines the interface for an HTTP server.
+type Server interface {
+	Start(addr string) error
+}
+
+{{- if .IsEcho }}
+// echoServer is the Echo implementation of the Server interface.
+type echoServer struct {
+	app    *echo.Echo
+	logger *slog.Logger
+}
+
+// NewEchoServer creates and configures an Echo server.
+func NewEchoServer(logger *slog.Logger) Server {
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// TODO: Add handlers
+	e.GET("/health", func(c echo.Context) error {
+		return c.String(200, "OK")
+	})
+
+	return &echoServer{app: e, logger: logger}
+}
+
+// Start starts the Echo server.
+func (s *echoServer) Start(addr string) error {
+	return s.app.Start(addr)
+}
+{{- end }}
+
+{{- if .IsFiber }}
+// fiberServer is the Fiber implementation of the Server interface.
+type fiberServer struct {
+	app    *fiber.App
+	logger *slog.Logger
+}
+
+// NewFiberServer creates and configures a Fiber server.
+func NewFiberServer(logger *slog.Logger) Server {
+	app := fiber.New()
+	app.Use(logger.New())
+
+	// TODO: Add handlers
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.SendString("OK")
+	})
+
+	return &fiberServer{app: app, logger: logger}
+}
+
+// Start starts the Fiber server.
+func (s *fiberServer) Start(addr string) error {
+	return s.app.Listen(addr)
+}
+{{- end }}

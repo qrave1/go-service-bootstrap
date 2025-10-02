@@ -1,0 +1,57 @@
+{{- /* templates/cmd/app/main.go.tmpl */ -}}
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"{{ .ProjectName }}/internal/application"
+	"{{ .ProjectName }}/internal/infra/ports/http"
+
+{{- if .HasDB }}
+	"{{ .ProjectName }}/internal/infra/adapters/postgres"
+	"{{ .ProjectName }}/internal/usecase"
+{{- end }}
+)
+
+func main() {
+	// Load config
+	cfg, err := application.LoadConfig()
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+
+	// Init logger
+	logger := application.NewLogger(cfg.LogLevel)
+
+	logger.Info("starting application")
+
+{{- if .HasDB }}
+	// Init DB connection
+	// dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	// 	cfg.DB.Host, cfg.DB.Port, cfg.DB.User, cfg.DB.Password, cfg.DB.Name)
+
+	// repo, err := postgres.NewPostgresRepository(dsn)
+	// if err != nil {
+	// 	logger.Fatal("failed to connect to database", "error", err)
+	// }
+	// logger.Info("database connection established")
+
+	// Init usecase
+	// exampleUsecase := usecase.NewExampleUsecase(repo)
+{{- end }}
+
+	// Init HTTP server
+{{- if .IsEcho }}
+	server := http.NewEchoServer(logger)
+{{- else if .IsFiber }}
+	server := http.NewFiberServer(logger)
+{{- else }}
+	// Default to net/http or handle error if no framework is selected
+{{- end }}
+
+	// Start server
+	if err := server.Start(fmt.Sprintf(":%d", cfg.HTTP.Port)); err != nil {
+		logger.Fatal("failed to start http server", "error", err)
+	}
+}

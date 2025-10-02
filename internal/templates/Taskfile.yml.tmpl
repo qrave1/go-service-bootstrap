@@ -1,0 +1,15 @@
+{{- /* templates/Taskfile.yml.tmpl */ -}}
+version: '3'
+
+tasks:
+  run:
+    cmds:
+      - go run ./cmd/app
+
+  build:
+    cmds:
+      - go build -o ./bin/app ./cmd/app
+
+  test:
+    cmds:
+      - go test ./...

@@ -2,19 +2,20 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"{{ .ProjectName }}/internal/application"
-{{- if .HasPostgres }}
-	"{{ .ProjectName }}/internal/infra/adapters/postgres"
-{{- else if .HasMysql }}
-	"{{ .ProjectName }}/internal/infra/adapters/mysql"
-{{- end }}
-	"{{ .ProjectName }}/internal/infra/ports/http"
-{{- if .HasDB }}
-	"{{ .ProjectName }}/internal/usecase"
-{{- end }}
+	"{{.ProjectName}}/internal/application"
+	config_loader "{{.ProjectName}}/internal/application/config"
+	app_logger "{{.ProjectName}}/internal/application/logger"
+{{if .HasTelegram}}
+	telegram_adapter "{{.ProjectName}}/internal/infra/adapters/telegram"
+	telegram_port "{{.ProjectName}}/internal/infra/ports/telegram"
+{{end}}
+	http_port "{{.ProjectName}}/internal/infra/ports/http"
 )
 
 func main() {
@@ -53,17 +54,13 @@ func main() {
 	// exampleUsecase := usecase.NewExampleUsecase(repo)
 {{- end }}
 
-	// Init HTTP server
-{{- if .IsEcho }}
-	server := http.NewEchoServer(logger)
-{{- else if .IsFiber }}
-	server := http.NewFiberServer(logger)
-{{- else }}
-	// Default to net/http or handle error if no framework is selected
-{{- end }}
+	app := application.New(cfg, logger)
 
-	// Start server
-	if err := server.Start(fmt.Sprintf(":%d", cfg.HTTP.Port)); err != nil {
-		logger.Fatal("failed to start http server", "error", err)
-	}
+{{if .HasTelegram}}
+	tgBot := telegram_adapter.MustStart(ctx, app)
+	telegram_port.RegisterHandlers(app, tgBot)
+{{end}}
+
+	// Run HTTP server
+	http_port.Run(ctx, app)
 }

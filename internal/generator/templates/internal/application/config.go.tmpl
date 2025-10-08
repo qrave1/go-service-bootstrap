@@ -11,9 +11,11 @@ import (
 
 type Config struct {
 	LogLevel string `env:"LOG_LEVEL" envDefault:"info"`
-	HTTP     struct {
-		Port int `env:"HTTP_PORT" envDefault:"8080"`
-	} `envPrefix:"HTTP_"`
+	HTTP     HTTP     `yaml:"http"`
+	Telegram Telegram `yaml:"telegram"`
+	{{if .HasDB}}
+	Database Database `yaml:"database"`
+	{{end}}
 {{- if .HasPostgres }}
 	Postgres struct {
 		Host     string `env:"PG_HOST" envDefault:"localhost"`
@@ -33,6 +35,19 @@ type Config struct {
 	} `envPrefix:"MYSQL_"`
 {{- end }}
 }
+
+	type HTTP struct {
+		Port int `yaml:"port" env:"HTTP_PORT"`
+	}
+
+	type Telegram struct {
+		Token string `yaml:"token" env:"TELEGRAM_BOT_TOKEN"`
+	}
+
+	{{if .HasDB}}
+	// Database represents database connection settings.
+	type Database struct {
+
 
 func LoadConfig() (*Config, error) {
 	cfg := &Config{}

@@ -1,0 +1,38 @@
+package telegram
+
+import (
+	"context"
+	"log/slog"
+	"time"
+
+	"{{.ProjectName}}/internal/application"
+	"gopkg.in/telebot.v3"
+)
+
+func MustStart(ctx context.Context, app *application.Application) *telebot.Bot {
+	b, err := telebot.NewBot(telebot.Settings{
+		Token:  app.Config.Telegram.Token,
+		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				app.Logger.Error("telegram bot recovered from panic", slog.Any("panic", r))
+			}
+		}()
+		app.Logger.Info("telegram bot started")
+		b.Start()
+	}()
+
+	go func() {
+		<-ctx.Done()
+		app.Logger.Info("stopping telegram bot")
+		b.Stop()
+	}()
+
+	return b
+}

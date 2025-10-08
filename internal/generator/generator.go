@@ -31,6 +31,9 @@ type Config struct {
 	// WebSocket
 	HasWebSocket bool
 
+	// Telegram
+	HasTelegram bool
+
 	// Features
 	HasHTML bool
 
@@ -59,6 +62,7 @@ func NewConfig(projectName string, options map[string]struct{}) Config {
 	_, cfg.HasMysql = options["MySQL"]
 	_, cfg.HasSqlite = options["SQLite"]
 	_, cfg.HasWebSocket = options["gorilla/websocket"]
+	_, cfg.HasTelegram = options["Telebot"]
 	_, cfg.HasHTML = options["Enable HTML templates"]
 	_, cfg.HasMakefile = options["Makefile"]
 	_, cfg.HasTaskfile = options["Taskfile"]
@@ -105,6 +109,9 @@ func Generate(cfg Config) error {
 			return nil
 		}
 		if !cfg.HasMysql && strings.Contains(path, "mysql") {
+			return nil
+		}
+		if !cfg.HasTelegram && strings.Contains(path, "telegram") {
 			return nil
 		}
 		if !cfg.HasDB && (strings.Contains(path, "domain") || strings.Contains(path, "usecase")) {

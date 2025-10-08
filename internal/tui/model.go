@@ -152,6 +152,8 @@ func runGenerator(projectName, config, httpFramework, database, taskRunner strin
 				cfg.HasWebSocket = true
 			case "Enable HTML templates":
 				cfg.HasHTML = true
+			case "Telebot":
+				cfg.HasTelegram = true
 			}
 		}
 
@@ -189,7 +191,7 @@ func (m Model) choicesForState() []list.Item {
 	case stateTaskRunner:
 		return []list.Item{choice{title: "Makefile"}, choice{title: "Taskfile"}}
 	case stateFeatures:
-		return []list.Item{choice{title: "gorilla/websocket"}, choice{title: "Enable HTML templates"}}
+		return []list.Item{choice{title: "gorilla/websocket"}, choice{title: "Enable HTML templates"}, choice{title: "Telebot"}}
 	default:
 		return nil
 	}
@@ -203,7 +205,7 @@ func InitialModel() Model {
 	ti.Width = 20
 
 	s := spinner.New()
-	s.Spinner = spinner.Dot
+	s.Spinner = spinner.Pulse
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
 	m := Model{

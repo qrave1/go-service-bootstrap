@@ -1,0 +1,12 @@
+package telegram
+
+import (
+	"{{.ProjectName}}/internal/application"
+	"gopkg.in/telebot.v3"
+)
+
+func RegisterHandlers(app *application.Application, bot *telebot.Bot) {
+	bot.Handle("/hello", func(c telebot.Context) error {
+		return c.Send("Hello!")
+	})
+}

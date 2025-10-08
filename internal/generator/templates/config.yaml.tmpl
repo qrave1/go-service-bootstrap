@@ -1,7 +1,18 @@
 log_level: "info"
 
 http:
-  port: {{ .HttpPort }}
+
+  port: {{.HttpPort}}
+
+
+
+{{if .HasTelegram}}
+
+telegram:
+
+  token: ${TELEGRAM_BOT_TOKEN:}
+
+{{end}}
 
 {{- if .HasPostgres }}
 postgres:
